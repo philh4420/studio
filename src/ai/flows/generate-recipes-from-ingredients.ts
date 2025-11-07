@@ -27,7 +27,7 @@ const GenerateRecipesFromIngredientsOutputSchema = z.object({
       ingredients: z.array(z.string()).describe('The ingredients required for the recipe.'),
       instructions: z.string().describe('The instructions for the recipe.'),
     })
-  ).describe('A list of recipe suggestions.'),
+  ).describe('A list of 10 recipe suggestions.'),
 });
 export type GenerateRecipesFromIngredientsOutput = z.infer<
   typeof GenerateRecipesFromIngredientsOutputSchema
@@ -43,7 +43,7 @@ const prompt = ai.definePrompt({
   name: 'generateRecipesFromIngredientsPrompt',
   input: {schema: GenerateRecipesFromIngredientsInputSchema},
   output: {schema: GenerateRecipesFromIngredientsOutputSchema},
-  prompt: `You are a recipe suggestion bot. Given the following ingredients, suggest some recipes that can be made.
+  prompt: `You are a recipe suggestion bot. Given the following ingredients, suggest 10 recipes that can be made.
 
 Ingredients: {{{ingredients}}}
 
