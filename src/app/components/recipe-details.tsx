@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Heart, Lightbulb, Loader2, Printer, Clock, BarChart, Utensils, Award } from 'lucide-react';
+import { Heart, Lightbulb, Loader2, Printer, Clock, BarChart, Utensils, Award, Minus, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface RecipeDetailsProps {
@@ -36,6 +36,16 @@ interface Complementary {
   reasoning: string;
 }
 
+// Simple function to parse ingredient quantities
+const parseIngredient = (ingredient: string): { quantity: number | null, unit: string, name: string } => {
+  const quantityMatch = ingredient.match(/^(\d+\.?\d*)\s*([a-zA-Z]*)\s*(.*)/);
+  if (quantityMatch) {
+    const [, quantity, unit, name] = quantityMatch;
+    return { quantity: parseFloat(quantity), unit: unit.trim(), name: name.trim() };
+  }
+  return { quantity: null, unit: '', name: ingredient };
+};
+
 export default function RecipeDetails({
   recipe,
   isOpen,
@@ -44,6 +54,16 @@ export default function RecipeDetails({
   const { isFavorite, addFavorite, removeFavorite, isLoaded } = useFavorites();
   const [complementary, setComplementary] = useState<Complementary | null>(null);
   const [isLoadingComplementary, setIsLoadingComplementary] = useState(false);
+  
+  const originalServings = recipe ? parseInt(recipe.servings.split(' ')[0]) : 1;
+  const [currentServings, setCurrentServings] = useState(originalServings);
+
+  useEffect(() => {
+    if (recipe) {
+      setCurrentServings(parseInt(recipe.servings.split(' ')[0]) || 1);
+    }
+  }, [recipe]);
+
 
   useEffect(() => {
     if (recipe && isOpen) {
@@ -54,7 +74,7 @@ export default function RecipeDetails({
           ingredients: recipe.ingredients,
           recipeName: recipe.name,
         });
-        if (!result.error) {
+        if (result && !result.error) {
           setComplementary(result);
         }
         setIsLoadingComplementary(false);
@@ -76,8 +96,26 @@ export default function RecipeDetails({
   };
 
   const handlePrint = () => {
-    window.print();
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
+  
+  const adjustServings = (amount: number) => {
+    setCurrentServings(prev => Math.max(1, prev + amount));
+  };
+
+  const getAdjustedIngredient = (ingredient: string) => {
+    const { quantity, unit, name } = parseIngredient(ingredient);
+    if (quantity !== null) {
+      const newQuantity = (quantity / originalServings) * currentServings;
+      // round to 2 decimal places if not an integer
+      const formattedQuantity = newQuantity % 1 === 0 ? newQuantity : newQuantity.toFixed(2);
+      return `${formattedQuantity} ${unit} ${name}`;
+    }
+    return ingredient;
+  };
+
 
   const instructionsArray = recipe.instructions
     .split(/\d+\.\s/)
@@ -88,7 +126,7 @@ export default function RecipeDetails({
       <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0" data-html2canvas-ignore>
         <ScrollArea className="h-full">
           <div className="printable-content">
-            <div className="relative">
+            <div className="relative print:hidden">
               <Image
                 src={recipe.image}
                 alt={recipe.name}
@@ -101,8 +139,8 @@ export default function RecipeDetails({
             </div>
 
             <div className="p-6">
-              <SheetHeader className="mb-4">
-                <SheetTitle className="font-headline text-3xl md:text-4xl">{recipe.name}</SheetTitle>
+              <SheetHeader className="mb-4 text-left print:text-center">
+                <SheetTitle className="font-headline text-3xl md:text-4xl print:text-4xl">{recipe.name}</SheetTitle>
                 <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.shortDescription}</SheetDescription>
                 <div className="flex items-center gap-4 pt-2 no-print">
                   <Button
@@ -142,7 +180,15 @@ export default function RecipeDetails({
                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
                   <Utensils className="h-6 w-6 text-primary" />
                   <p className="text-sm font-semibold">Serves</p>
-                  <p className="text-xs text-muted-foreground">{recipe.servings}</p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 no-print" onClick={() => adjustServings(-1)} disabled={currentServings <= 1}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-xs text-muted-foreground font-bold">{currentServings}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 no-print" onClick={() => adjustServings(1)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
                   <Award className="h-6 w-6 text-primary" />
@@ -169,7 +215,7 @@ export default function RecipeDetails({
                   <AccordionContent>
                     <div className="flex flex-wrap gap-2 pt-2">
                       {recipe.ingredients.map((ing) => (
-                        <Badge key={ing} variant="secondary" className="text-base py-1 px-3">{ing}</Badge>
+                        <Badge key={ing} variant="secondary" className="text-base py-1 px-3">{getAdjustedIngredient(ing)}</Badge>
                       ))}
                     </div>
                   </AccordionContent>
@@ -199,7 +245,7 @@ export default function RecipeDetails({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Thinking of complementary ingredients...</span>
                       </div>
-                    ) : complementary && !complementary.error ? (
+                    ) : complementary && complementary.suggestedIngredients ? (
                       <div className="space-y-4 pt-2">
                           <p className="text-base italic text-muted-foreground">{complementary.reasoning}</p>
                           <Separator/>

@@ -28,6 +28,7 @@ const SuggestComplementaryIngredientsOutputSchema = z.object({
   reasoning: z
     .string()
     .describe('The reasoning behind the suggested ingredients.'),
+  error: z.string().optional(),
 });
 export type SuggestComplementaryIngredientsOutput = z.infer<
   typeof SuggestComplementaryIngredientsOutputSchema
@@ -58,7 +59,12 @@ const suggestComplementaryIngredientsFlow = ai.defineFlow(
     outputSchema: SuggestComplementaryIngredientsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        const {output} = await prompt(input);
+        return output!;
+    } catch(e) {
+        console.error(e);
+        return { suggestedIngredients: [], reasoning: '', error: 'Could not generate suggestions.'}
+    }
   }
 );
