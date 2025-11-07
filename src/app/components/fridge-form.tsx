@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Sparkles, Loader2, Fridge } from 'lucide-react';
+import { X, Sparkles, Loader2, Refrigerator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -100,7 +100,7 @@ export default function FridgeForm({
     <Card className="sticky top-8">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Fridge className="h-6 w-6" />
+          <Refrigerator className="h-6 w-6" />
           My Fridge
         </CardTitle>
         <CardDescription>
