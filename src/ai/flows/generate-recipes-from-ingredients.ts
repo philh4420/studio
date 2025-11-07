@@ -21,13 +21,28 @@ export type GenerateRecipesFromIngredientsInput = z.infer<
 >;
 
 const GenerateRecipesFromIngredientsOutputSchema = z.object({
-  recipes: z.array(
-    z.object({
-      name: z.string().describe('The name of the recipe.'),
-      ingredients: z.array(z.string()).describe('The ingredients required for the recipe.'),
-      instructions: z.string().describe('The instructions for the recipe.'),
-    })
-  ).describe('A list of 10 recipe suggestions.'),
+  recipes: z
+    .array(
+      z.object({
+        name: z.string().describe('The name of the recipe.'),
+        shortDescription: z
+          .string()
+          .describe('A short, enticing description of the recipe.'),
+        prepTime: z.string().describe("The preparation time, e.g., '15 minutes'."),
+        cookTime: z.string().describe("The cooking time, e.g., '25 minutes'."),
+        servings: z.string().describe("The number of servings, e.g., '4 people'."),
+        difficulty: z
+          .enum(['Easy', 'Medium', 'Hard'])
+          .describe('The difficulty level of the recipe.'),
+        cuisine: z.string().describe('The type of cuisine, e.g., Italian, Mexican.'),
+        calories: z.number().describe('The estimated number of calories per serving.'),
+        ingredients: z
+          .array(z.string())
+          .describe('The ingredients required for the recipe.'),
+        instructions: z.string().describe('The instructions for the recipe.'),
+      })
+    )
+    .describe('A list of 10 recipe suggestions.'),
 });
 export type GenerateRecipesFromIngredientsOutput = z.infer<
   typeof GenerateRecipesFromIngredientsOutputSchema
@@ -47,7 +62,7 @@ const prompt = ai.definePrompt({
 
 Ingredients: {{{ingredients}}}
 
-Please provide a list of recipes with their ingredients and instructions.
+Please provide a list of recipes with all the requested details.
 
 Output in the following JSON format: {{outputSchema}}`,
 });
