@@ -22,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Heart, Lightbulb, Loader2, Printer, Clock, BarChart, Utensils, Award, Minus, Plus } from 'lucide-react';
+import { Heart, Lightbulb, Loader2, Printer, Clock, Utensils, Award, Minus, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface RecipeDetailsProps {
@@ -96,9 +96,7 @@ export default function RecipeDetails({
   };
 
   const handlePrint = () => {
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    window.print();
   };
   
   const adjustServings = (amount: number) => {
@@ -107,7 +105,7 @@ export default function RecipeDetails({
 
   const getAdjustedIngredient = (ingredient: string) => {
     const { quantity, unit, name } = parseIngredient(ingredient);
-    if (quantity !== null) {
+    if (quantity !== null && originalServings > 0) {
       const newQuantity = (quantity / originalServings) * currentServings;
       // round to 2 decimal places if not an integer
       const formattedQuantity = newQuantity % 1 === 0 ? newQuantity : newQuantity.toFixed(2);
@@ -123,10 +121,10 @@ export default function RecipeDetails({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0" data-html2canvas-ignore>
+      <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0">
         <ScrollArea className="h-full">
           <div className="printable-content">
-            <div className="relative print:hidden">
+            <div className="relative print:hidden" data-html2canvas-ignore>
               <Image
                 src={recipe.image}
                 alt={recipe.name}
