@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "recipe_1",
+      "description": "A vibrant salad in a bowl.",
+      "imageUrl": "https://images.unsplash.com/photo-1679744034792-705da160c109?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxzYWxhZCUyMGJvd2x8ZW58MHx8fHwxNzYyNDY2NTgzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "salad bowl"
+    },
+    {
+      "id": "recipe_2",
+      "description": "A steaming plate of pasta.",
+      "imageUrl": "https://images.unsplash.com/photo-1704915912460-2f8aebeac65c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwYXN0YSUyMHBsYXRlfGVufDB8fHx8MTc2MjQ2NjQxMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pasta plate"
+    },
+    {
+      "id": "recipe_3",
+      "description": "A delicious-looking soup.",
+      "imageUrl": "https://images.unsplash.com/photo-1700628110601-074c7991fc6c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzb3VwJTIwYm93bHxlbnwwfHx8fDE3NjI0ODM0NzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "soup bowl"
+    },
+    {
+      "id": "recipe_4",
+      "description": "Grilled chicken with vegetables.",
+      "imageUrl": "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxncmlsbGVkJTIwY2hpY2tlbnxlbnwwfHx8fDE3NjI0OTAzMzZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "grilled chicken"
+    },
+    {
+      "id": "recipe_5",
+      "description": "A freshly baked pizza.",
+      "imageUrl": "https://images.unsplash.com/photo-1613564834361-9436948817d1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwaXp6YSUyMHNsaWNlfGVufDB8fHx8MTc2MjQ3NTAwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pizza slice"
+    },
+    {
+      "id": "recipe_6",
+      "description": "A stack of pancakes with syrup.",
+      "imageUrl": "https://images.unsplash.com/photo-1542904990-6d33b1337a21?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwYW5jYWtlcyUyMHN0YWNrfGVufDB8fHx8MTc2MjU0OTQ3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pancakes stack"
+    },
+    {
+      "id": "recipe_7",
+      "description": "A close-up of a burger.",
+      "imageUrl": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxidXJnZXJ8ZW58MHx8fHwxNzYyNTQyNjcwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "burger"
+    },
+    {
+      "id": "recipe_8",
+      "description": "A colorful stir-fry in a wok.",
+      "imageUrl": "https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxzdGlyJTIwZnJ5fGVufDB8fHx8MTc2MjU0NTQ0Nnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stir fry"
+    },
+    {
+      "id": "recipe_9",
+      "description": "A curry dish in a bowl.",
+      "imageUrl": "https://images.unsplash.com/photo-1711633648895-f5df0336ff55?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxjdXJyeSUyMGRpc2h8ZW58MHx8fHwxNzYyNTMwMzI4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "curry dish"
+    },
+    {
+      "id": "recipe_10",
+      "description": "Freshly baked bread.",
+      "imageUrl": "https://images.unsplash.com/photo-1590301157172-7ba48dd1c2b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8YmFrZWQlMjBicmVhZHxlbnwwfHx8fDE3NjI0NTkyMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "baked bread"
+    }
+  ]
 }
