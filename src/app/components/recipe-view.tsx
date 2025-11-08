@@ -12,15 +12,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, AlertTriangle, Search, Filter } from 'lucide-react';
+import { UtensilsCrossed, AlertTriangle, Search, Filter, ArrowUpDown, X } from 'lucide-react';
 
 interface RecipeViewProps {
   recipes: RecipeWithId[];
   isLoading: boolean;
   error: string | null;
 }
+
+type SortOrder = 'name-asc' | 'name-desc';
 
 function RecipeSkeleton() {
   return (
@@ -43,19 +47,20 @@ export default function RecipeView({
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('name-asc');
 
   const uniqueCuisines = useMemo(() => {
     const cuisines = new Set(recipes.map(r => r.cuisine));
-    return Array.from(cuisines);
+    return Array.from(cuisines).sort();
   }, [recipes]);
 
   const uniqueDifficulties = useMemo(() => {
     const difficulties = new Set(recipes.map(r => r.difficulty));
-    return Array.from(difficulties);
+    return Array.from(difficulties).sort();
   }, [recipes]);
 
-  const filteredRecipes = useMemo(() => {
-    return recipes.filter(recipe => {
+  const filteredAndSortedRecipes = useMemo(() => {
+    const filtered = recipes.filter(recipe => {
       const matchesSearch =
         recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         recipe.ingredients.some(ing => ing.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -68,7 +73,15 @@ export default function RecipeView({
 
       return matchesSearch && matchesCuisine && matchesDifficulty;
     });
-  }, [recipes, searchTerm, cuisineFilter, difficultyFilter]);
+
+    return filtered.sort((a, b) => {
+      if (sortOrder === 'name-asc') {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+  }, [recipes, searchTerm, cuisineFilter, difficultyFilter, sortOrder]);
 
   const toggleFilter = (filterList: string[], setFilter: (val: string[]) => void, value: string) => {
     if (filterList.includes(value)) {
@@ -77,6 +90,14 @@ export default function RecipeView({
       setFilter([...filterList, value]);
     }
   };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCuisineFilter([]);
+    setDifficultyFilter([]);
+  };
+
+  const areFiltersActive = searchTerm || cuisineFilter.length > 0 || difficultyFilter.length > 0;
 
   if (isLoading) {
     return (
@@ -155,9 +176,26 @@ export default function RecipeView({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"><ArrowUpDown className="mr-2 h-4 w-4"/>Sort By</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuRadioGroup value={sortOrder} onValueChange={(value) => setSortOrder(value as SortOrder)}>
+                <DropdownMenuRadioItem value="name-asc">Name (A-Z)</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="name-desc">Name (Z-A)</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {areFiltersActive && (
+            <Button variant="ghost" onClick={clearFilters}>
+              <X className="mr-2 h-4 w-4" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
-      <RecipeList recipes={filteredRecipes} />
+      <RecipeList recipes={filteredAndSortedRecipes} />
     </>
   );
 }

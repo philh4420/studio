@@ -24,7 +24,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Heart, Lightbulb, Loader2, Clock, Utensils, Award, Minus, Plus, Share2, BrainCircuit, ListPlus, Check } from 'lucide-react';
+import { Heart, Lightbulb, Loader2, Clock, Utensils, Award, Minus, Plus, Share2, BrainCircuit, ListPlus, Check, Printer } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import HealthSuggestions from './health-suggestions';
 
@@ -93,13 +93,26 @@ export default function RecipeDetails({
     return ingredient;
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const recipeText = `Check out this recipe: ${recipe.name}\n\nIngredients:\n${recipe.ingredients.join('\n')}\n\nInstructions:\n${recipe.instructions}`;
-    navigator.clipboard.writeText(recipeText);
-    toast({
-      title: 'Recipe Copied!',
-      description: 'The recipe has been copied to your clipboard.',
-    });
+    try {
+      await navigator.clipboard.writeText(recipeText);
+      toast({
+        title: 'Recipe Copied!',
+        description: 'The recipe has been copied to your clipboard.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Copy Failed',
+        description: 'Clipboard access is blocked in this environment. Please copy the recipe manually.',
+      });
+      console.error('Failed to copy text: ', error);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleToggleShoppingListItem = (ingredient: string) => {
@@ -117,10 +130,10 @@ export default function RecipeDetails({
   return (
     <>
       <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0">
-          <ScrollArea className="h-full">
-            <div className="print:hidden">
-              <div className="relative">
+        <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 print:p-0 print:max-w-full print:border-0">
+          <ScrollArea className="h-full print:h-auto">
+            <div className="p-6 print:p-4">
+              <div className="relative print:hidden">
                 <Image
                   src={recipe.image}
                   alt={recipe.name}
@@ -136,7 +149,7 @@ export default function RecipeDetails({
                 <SheetHeader className="mb-4 text-left">
                   <SheetTitle className="font-headline text-3xl md:text-4xl">{recipe.name}</SheetTitle>
                   <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.shortDescription}</SheetDescription>
-                  <div className="flex items-center gap-2 pt-2 flex-wrap">
+                  <div className="flex items-center gap-2 pt-2 flex-wrap print:hidden">
                     <Button
                       onClick={toggleFavorite}
                       variant="outline"
@@ -151,6 +164,10 @@ export default function RecipeDetails({
                       <Share2 className="h-4 w-4 mr-2" />
                       Share
                     </Button>
+                    <Button onClick={handlePrint} variant="outline" size="sm">
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print
+                    </Button>
                     <Button onClick={() => setIsHealthModalOpen(true)} variant="outline" size="sm" className="bg-accent/10 text-accent-foreground">
                       <BrainCircuit className="h-4 w-4 mr-2 text-accent" />
                       Genie&apos;s Tips
@@ -158,7 +175,7 @@ export default function RecipeDetails({
                   </div>
                 </SheetHeader>
 
-                <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
+                <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4 print:hidden">
                   <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
                     <Clock className="h-6 w-6 text-primary" />
                     <p className="text-sm font-semibold">Prep</p>
@@ -189,7 +206,7 @@ export default function RecipeDetails({
                   </div>
                 </div>
                 
-                <div className="mb-6 flex justify-center gap-4 text-center">
+                <div className="mb-6 flex justify-center gap-4 text-center print:hidden">
                   <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
                       <p className="text-sm font-semibold">Cuisine</p>
                       <p className="text-xs text-muted-foreground">{recipe.cuisine}</p>
@@ -209,7 +226,7 @@ export default function RecipeDetails({
                         {recipe.ingredients.map((ing) => (
                            <li key={ing} className="flex items-center justify-between group">
                             <span className="text-base">{getAdjustedIngredient(ing)}</span>
-                            <Button size="sm" variant="ghost" onClick={() => handleToggleShoppingListItem(ing)}>
+                            <Button size="sm" variant="ghost" onClick={() => handleToggleShoppingListItem(ing)} className="print:hidden">
                                {isInList(ing) ? 
                                  <Check className="h-4 w-4 mr-2 text-primary"/> : 
                                  <ListPlus className="h-4 w-4 mr-2 text-muted-foreground group-hover:text-primary"/>
@@ -233,7 +250,7 @@ export default function RecipeDetails({
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="suggestions">
+                  <AccordionItem value="suggestions" className="print:hidden">
                     <AccordionTrigger className="text-lg font-semibold">
                         <div className="flex items-center gap-2">
                             <Lightbulb className="h-5 w-5 text-accent" />

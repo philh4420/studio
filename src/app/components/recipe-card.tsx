@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart } from 'lucide-react';
+import { Heart, Share2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface RecipeCardProps {
   recipe: RecipeWithId;
@@ -26,6 +27,7 @@ export default function RecipeCard({
 }: RecipeCardProps) {
   const { isFavorite, addFavorite, removeFavorite, isLoaded } = useFavorites();
   const isRecipeFavorite = isLoaded && isFavorite(recipe.id);
+  const { toast } = useToast();
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,6 +36,16 @@ export default function RecipeCard({
     } else {
       addFavorite(recipe);
     }
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const recipeText = `Check out this recipe: ${recipe.name}\n\nIngredients:\n${recipe.ingredients.join('\n')}\n\nInstructions:\n${recipe.instructions}`;
+    navigator.clipboard.writeText(recipeText);
+    toast({
+      title: 'Recipe Copied!',
+      description: 'The recipe has been copied to your clipboard.',
+    });
   };
 
   return (
@@ -51,17 +63,28 @@ export default function RecipeCard({
           className="aspect-[3/2] w-full object-cover transition-transform group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute right-3 top-3 rounded-full bg-background/50 text-destructive hover:bg-background/80 hover:text-destructive"
-          onClick={toggleFavorite}
-          aria-label={isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'}
-        >
-          <Heart
-            className={`h-5 w-5 ${isRecipeFavorite ? 'fill-current' : ''}`}
-          />
-        </Button>
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full bg-background/50 text-destructive hover:bg-background/80 hover:text-destructive"
+            onClick={toggleFavorite}
+            aria-label={isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <Heart
+              className={`h-5 w-5 ${isRecipeFavorite ? 'fill-current' : ''}`}
+            />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full bg-background/50 text-foreground hover:bg-background/80"
+            onClick={handleShare}
+            aria-label="Share recipe"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <CardHeader>

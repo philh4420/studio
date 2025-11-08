@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Sparkles, Loader2, Refrigerator } from 'lucide-react';
+import { X, Sparkles, Loader2, Refrigerator, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -58,6 +58,10 @@ export default function FridgeForm({
 
   function removeIngredient(ingredientToRemove: string) {
     setIngredients(ingredients.filter((i) => i !== ingredientToRemove));
+  }
+
+  function clearIngredients() {
+    setIngredients([]);
   }
 
   async function handleGenerateRecipes() {
@@ -126,9 +130,17 @@ export default function FridgeForm({
           </form>
         </Form>
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Available Ingredients:
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Available Ingredients:
+            </h3>
+            {ingredients.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={clearIngredients}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear
+              </Button>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {ingredients.length > 0 ? (
               ingredients.map((ingredient) => (
