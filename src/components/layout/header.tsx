@@ -1,5 +1,6 @@
 import { FridgeGenieLogo } from '@/components/icons';
 import { ThemeToggle } from '@/app/components/theme-toggle';
+import UserMenu from '@/app/components/user-menu';
 
 export function Header() {
   return (
@@ -10,8 +11,9 @@ export function Header() {
           Fridge Genie
         </h1>
       </div>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
+        <UserMenu />
       </div>
     </header>
   );

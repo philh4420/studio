@@ -9,3 +9,7 @@ export type RecipeWithId = Recipe & {
   image: string;
   imageHint: string;
 };
+
+export type ShoppingListItem = {
+  name: string;
+};

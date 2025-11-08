@@ -3,6 +3,7 @@ import { PT_Sans } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/app/components/theme-provider';
 import './globals.css';
+import { FirebaseProvider } from '@/firebase/provider';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -25,7 +26,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${ptSans.className} font-body antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <FirebaseProvider>{children}</FirebaseProvider>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, ShoppingBasket, Trash2 } from 'lucide-react';
+import { X, ShoppingBasket, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
+import { useUser } from '@/firebase';
 
 export default function ShoppingListView() {
+  const user = useUser();
   const { shoppingList, removeIngredient, clearList } = useShoppingList();
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
@@ -24,6 +26,20 @@ export default function ShoppingListView() {
     checkedItems.forEach(item => removeIngredient(item));
     setCheckedItems([]);
   };
+
+  if (!user) {
+    return (
+      <div className="mt-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card p-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
+          <User className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">Please Log In</h3>
+        <p className="mt-2 text-muted-foreground">
+          You need to be logged in to see your shopping list.
+        </p>
+      </div>
+    );
+  }
 
   if (shoppingList.length === 0) {
     return (

@@ -1,40 +1,46 @@
 'use client';
-
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
+import {
+  doc,
+  setDoc,
+  deleteDoc,
+  collection,
+  writeBatch,
+} from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-const SHOPPING_LIST_KEY = 'fridge-genie-shopping-list';
-
 export function useShoppingList() {
-  const [shoppingList, setShoppingList] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const user = useUser();
+  const firestore = useFirestore();
   const { toast } = useToast();
 
-  useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(SHOPPING_LIST_KEY);
-      if (item) {
-        setShoppingList(JSON.parse(item));
-      }
-    } catch (error) {
-      console.error('Failed to load shopping list from localStorage', error);
-    }
-    setIsLoaded(true);
-  }, []);
+  const shoppingListCollection = useMemo(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'shoppingList');
+  }, [user, firestore]);
 
-  const updateLocalStorage = (updatedList: string[]) => {
-    try {
-      window.localStorage.setItem(
-        SHOPPING_LIST_KEY,
-        JSON.stringify(updatedList)
-      );
-    } catch (error) {
-      console.error('Failed to save shopping list to localStorage', error);
-    }
-  };
+  const { data, status } = useCollection(shoppingListCollection, {
+    key: 'name',
+  });
+
+  const shoppingList: string[] = useMemo(() => {
+    if (!data) return [];
+    return data.map((item) => item.name);
+  }, [data]);
+
+  const isLoaded = status === 'success' || status === 'error';
 
   const addIngredient = useCallback(
     (ingredient: string) => {
+      if (!user || !firestore || !shoppingListCollection) {
+        toast({
+          variant: 'destructive',
+          title: 'Please log in',
+          description: 'You must be logged in to add to your shopping list.',
+        });
+        return;
+      }
       if (shoppingList.includes(ingredient)) {
         toast({
           variant: 'destructive',
@@ -43,38 +49,79 @@ export function useShoppingList() {
         });
         return;
       }
-      const newList = [...shoppingList, ingredient];
-      setShoppingList(newList);
-      updateLocalStorage(newList);
-      toast({
-        title: 'Ingredient Added!',
-        description: `${ingredient} has been added to your shopping list.`,
-      });
+
+      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-');
+      const itemRef = doc(shoppingListCollection, ingredientId);
+
+      setDoc(itemRef, { name: ingredient })
+        .then(() => {
+          toast({
+            title: 'Ingredient Added!',
+            description: `${ingredient} has been added to your shopping list.`,
+          });
+        })
+        .catch((error) => {
+          console.error('Error adding to shopping list:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not add ingredient. Please try again.',
+          });
+        });
     },
-    [shoppingList, toast]
+    [user, firestore, shoppingListCollection, shoppingList, toast]
   );
 
   const removeIngredient = useCallback(
     (ingredient: string) => {
-      const newList = shoppingList.filter((item) => item !== ingredient);
-      setShoppingList(newList);
-      updateLocalStorage(newList);
-      toast({
-        title: 'Ingredient Removed',
-        description: `${ingredient} has been removed from your list.`,
-      });
+      if (!user || !firestore || !shoppingListCollection) return;
+      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-');
+      const itemRef = doc(shoppingListCollection, ingredientId);
+
+      deleteDoc(itemRef)
+        .then(() => {
+          toast({
+            title: 'Ingredient Removed',
+            description: `${ingredient} has been removed from your list.`,
+          });
+        })
+        .catch((error) => {
+          console.error('Error removing from shopping list:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not remove ingredient. Please try again.',
+          });
+        });
     },
-    [shoppingList, toast]
+    [user, firestore, shoppingListCollection, toast]
   );
 
-  const clearList = useCallback(() => {
-    setShoppingList([]);
-    updateLocalStorage([]);
-    toast({
-      title: 'Shopping List Cleared',
+  const clearList = useCallback(async () => {
+    if (!user || !firestore || !data) return;
+
+    const batch = writeBatch(firestore);
+    data.forEach((item) => {
+      const ingredientId = (item.name as string).toLowerCase().replace(/\s+/g, '-');
+      const itemRef = doc(firestore, 'users', user.uid, 'shoppingList', ingredientId);
+      batch.delete(itemRef);
     });
-  }, [toast]);
-  
+
+    try {
+      await batch.commit();
+      toast({
+        title: 'Shopping List Cleared',
+      });
+    } catch (error) {
+      console.error('Error clearing shopping list:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not clear the shopping list. Please try again.',
+      });
+    }
+  }, [user, firestore, data, toast]);
+
   const isInList = useCallback(
     (ingredient: string) => {
       return shoppingList.some((item) => item === ingredient);
@@ -82,5 +129,12 @@ export function useShoppingList() {
     [shoppingList]
   );
 
-  return { shoppingList, addIngredient, removeIngredient, clearList, isInList, isLoaded };
+  return {
+    shoppingList,
+    addIngredient,
+    removeIngredient,
+    clearList,
+    isInList,
+    isLoaded,
+  };
 }
