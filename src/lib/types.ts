@@ -9,5 +9,3 @@ export type RecipeWithId = Recipe & {
   image: string;
   imageHint: string;
 };
-
-export type PrintRecipe = (recipe: RecipeWithId) => void;

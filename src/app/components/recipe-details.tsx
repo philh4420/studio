@@ -5,7 +5,6 @@ import Image from 'next/image';
 import type { RecipeWithId } from '@/lib/types';
 import { useFavorites } from '@/hooks/use-favorites';
 import { getComplementaryIngredientsAction } from '@/app/actions';
-import { usePrintStore } from '@/hooks/use-print';
 
 import {
   Sheet,
@@ -23,7 +22,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Heart, Lightbulb, Loader2, Printer, Clock, Utensils, Award, Minus, Plus } from 'lucide-react';
+import { Heart, Lightbulb, Loader2, Clock, Utensils, Award, Minus, Plus } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface RecipeDetailsProps {
@@ -60,8 +59,6 @@ export default function RecipeDetails({
   const originalServings = recipe ? parseInt(recipe.servings.split(' ')[0]) || 1 : 1;
   const [currentServings, setCurrentServings] = useState(originalServings);
 
-  const setRecipeToPrint = usePrintStore((state) => state.setRecipeToPrint);
-
   useEffect(() => {
     if (recipe) {
       setCurrentServings(parseInt(recipe.servings.split(' ')[0]) || 1);
@@ -96,12 +93,6 @@ export default function RecipeDetails({
       removeFavorite(recipe.id);
     } else {
       addFavorite(recipe);
-    }
-  };
-
-  const handlePrint = () => {
-    if(recipe) {
-      setRecipeToPrint(recipe);
     }
   };
   
@@ -157,15 +148,6 @@ export default function RecipeDetails({
                       className={`h-4 w-4 ${isRecipeFavorite ? 'text-destructive fill-current' : 'text-foreground'}`}
                     />
                     {isRecipeFavorite ? 'Saved' : 'Save'}
-                  </Button>
-                  <Button
-                    onClick={handlePrint}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Print
                   </Button>
                 </div>
               </SheetHeader>
