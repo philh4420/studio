@@ -1,23 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { RecipeWithId } from '@/lib/types';
+import { usePrintStore } from '@/hooks/use-print';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/header';
 import FridgeForm from '@/app/components/fridge-form';
 import RecipeView from '@/app/components/recipe-view';
 import FavoritesView from '@/app/components/favorites-view';
 import { BookMarked, ChefHat } from 'lucide-react';
+import RecipePrintContent from './components/recipe-print-content';
 
 export default function Home() {
   const [recipes, setRecipes] = useState<RecipeWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const recipeToPrint = usePrintStore((state) => state.recipeToPrint);
+  const setRecipeToPrint = usePrintStore((state) => state.setRecipeToPrint);
+
+  useEffect(() => {
+    if (recipeToPrint) {
+      // Small timeout to allow state to update and component to render
+      const timer = setTimeout(() => {
+        window.print();
+        setRecipeToPrint(null); // Reset after printing
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [recipeToPrint, setRecipeToPrint]);
+
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8">
+      <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8 print:hidden">
         <Tabs defaultValue="generator" className="w-full max-w-6xl">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="generator">
@@ -52,6 +69,7 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </main>
+      {recipeToPrint && <RecipePrintContent recipe={recipeToPrint} />}
     </div>
   );
 }

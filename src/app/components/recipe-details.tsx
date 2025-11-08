@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { RecipeWithId } from '@/lib/types';
 import { useFavorites } from '@/hooks/use-favorites';
 import { getComplementaryIngredientsAction } from '@/app/actions';
+import { usePrintStore } from '@/hooks/use-print';
 
 import {
   Sheet,
@@ -46,71 +47,6 @@ const parseIngredient = (ingredient: string): { quantity: number | null, unit: s
   return { quantity: null, unit: '', name: ingredient };
 };
 
-const RecipePrintContent = ({ recipe, currentServings, originalServings, getAdjustedIngredient }: { recipe: RecipeWithId; currentServings: number, originalServings: number, getAdjustedIngredient: (ingredient: string) => string }) => {
-  const instructionsArray = recipe.instructions
-    .split(/\d+\.\s/)
-    .filter((step) => step.trim() !== '');
-
-  return (
-    <div id="printable-content" className="hidden print:block p-8">
-      <h1 className="font-headline text-4xl text-black mb-2">{recipe.name}</h1>
-      <p className="text-lg italic text-gray-600 mb-6">{recipe.shortDescription}</p>
-
-      <div className="mb-8 grid grid-cols-4 gap-4 text-center">
-        <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-          <Clock className="h-6 w-6 text-black" />
-          <p className="text-sm font-semibold text-black">Prep</p>
-          <p className="text-xs text-gray-600">{recipe.prepTime}</p>
-        </div>
-        <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-          <Clock className="h-6 w-6 text-black" />
-          <p className="text-sm font-semibold text-black">Cook</p>
-          <p className="text-xs text-gray-600">{recipe.cookTime}</p>
-        </div>
-        <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-          <Utensils className="h-6 w-6 text-black" />
-          <p className="text-sm font-semibold text-black">Serves</p>
-          <span className="text-xs font-bold text-gray-600">{currentServings}</span>
-        </div>
-        <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-          <Award className="h-6 w-6 text-black" />
-          <p className="text-sm font-semibold text-black">Difficulty</p>
-          <p className="text-xs text-gray-600">{recipe.difficulty}</p>
-        </div>
-      </div>
-      
-       <div className="mb-8 grid grid-cols-2 gap-4 text-center">
-          <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-            <p className="text-sm font-semibold text-black">Cuisine</p>
-            <p className="text-xs text-gray-600">{recipe.cuisine}</p>
-          </div>
-          <div className="flex flex-col items-center gap-1 rounded-lg bg-gray-100 p-3">
-            <p className="text-sm font-semibold text-black">Calories</p>
-            <p className="text-xs text-gray-600">{recipe.calories} kcal</p>
-          </div>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-black">Ingredients</h2>
-        <div className="flex flex-wrap gap-2">
-          {recipe.ingredients.map((ing) => (
-            <div key={ing} className="bg-gray-200 text-black text-base py-1 px-3 rounded-full">{getAdjustedIngredient(ing)}</div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-semibold mb-4 text-black">Instructions</h2>
-        <ol className="list-inside list-decimal space-y-4 text-base text-black">
-          {instructionsArray.map((step, index) => (
-            <li key={index} className="leading-relaxed">{step.trim()}</li>
-          ))}
-        </ol>
-      </div>
-    </div>
-  );
-};
-
 
 export default function RecipeDetails({
   recipe,
@@ -123,6 +59,8 @@ export default function RecipeDetails({
   
   const originalServings = recipe ? parseInt(recipe.servings.split(' ')[0]) || 1 : 1;
   const [currentServings, setCurrentServings] = useState(originalServings);
+
+  const setRecipeToPrint = usePrintStore((state) => state.setRecipeToPrint);
 
   useEffect(() => {
     if (recipe) {
@@ -162,7 +100,9 @@ export default function RecipeDetails({
   };
 
   const handlePrint = () => {
-    window.print();
+    if(recipe) {
+      setRecipeToPrint(recipe);
+    }
   };
   
   const adjustServings = (amount: number) => {
@@ -186,152 +126,149 @@ export default function RecipeDetails({
     .filter((step) => step.trim() !== '');
 
   return (
-    <>
-      <RecipePrintContent recipe={recipe} currentServings={currentServings} originalServings={originalServings} getAdjustedIngredient={getAdjustedIngredient} />
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0 print:hidden">
-          <ScrollArea className="h-full">
-            <div>
-              <div className="relative">
-                <Image
-                  src={recipe.image}
-                  alt={recipe.name}
-                  width={800}
-                  height={400}
-                  data-ai-hint={recipe.imageHint}
-                  className="aspect-[2/1] w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              </div>
-
-              <div className="p-6">
-                <SheetHeader className="mb-4 text-left">
-                  <SheetTitle className="font-headline text-3xl md:text-4xl">{recipe.name}</SheetTitle>
-                  <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.shortDescription}</SheetDescription>
-                  <div className="flex items-center gap-4 pt-2">
-                    <Button
-                      onClick={toggleFavorite}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Heart
-                        className={`h-4 w-4 ${isRecipeFavorite ? 'text-destructive fill-current' : 'text-foreground'}`}
-                      />
-                      {isRecipeFavorite ? 'Saved' : 'Save'}
-                    </Button>
-                    <Button
-                      onClick={handlePrint}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                    >
-                      <Printer className="h-4 w-4" />
-                      Print
-                    </Button>
-                  </div>
-                </SheetHeader>
-
-                <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
-                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                    <Clock className="h-6 w-6 text-primary" />
-                    <p className="text-sm font-semibold">Prep</p>
-                    <p className="text-xs text-muted-foreground">{recipe.prepTime}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                    <Clock className="h-6 w-6 text-primary" />
-                    <p className="text-sm font-semibold">Cook</p>
-                    <p className="text-xs text-muted-foreground">{recipe.cookTime}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                    <Utensils className="h-6 w-6 text-primary" />
-                    <p className="text-sm font-semibold">Serves</p>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustServings(-1)} disabled={currentServings <= 1}>
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="text-xs font-bold text-muted-foreground">{currentServings}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustServings(1)}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                    <Award className="h-6 w-6 text-primary" />
-                    <p className="text-sm font-semibold">Difficulty</p>
-                    <p className="text-xs text-muted-foreground">{recipe.difficulty}</p>
-                  </div>
-                </div>
-                
-                <div className="mb-6 flex justify-center gap-4 text-center">
-                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
-                      <p className="text-sm font-semibold">Cuisine</p>
-                      <p className="text-xs text-muted-foreground">{recipe.cuisine}</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
-                      <p className="text-sm font-semibold">Calories</p>
-                      <p className="text-xs text-muted-foreground">{recipe.calories} kcal</p>
-                    </div>
-                </div>
-
-
-                <Accordion type="multiple" defaultValue={['ingredients', 'instructions']} className="w-full">
-                  <AccordionItem value="ingredients">
-                    <AccordionTrigger className="text-lg font-semibold">Ingredients</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {recipe.ingredients.map((ing) => (
-                          <Badge key={ing} variant="secondary" className="text-base py-1 px-3">{getAdjustedIngredient(ing)}</Badge>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="instructions">
-                    <AccordionTrigger className="text-lg font-semibold">Instructions</AccordionTrigger>
-                    <AccordionContent>
-                      <ol className="list-inside list-decimal space-y-4 pt-2 text-base">
-                        {instructionsArray.map((step, index) => (
-                          <li key={index} className="leading-relaxed">{step.trim()}</li>
-                        ))}
-                      </ol>
-                    </AccordionContent>
-                  </AccordionItem>
-
-                  <AccordionItem value="suggestions">
-                    <AccordionTrigger className="text-lg font-semibold">
-                        <div className="flex items-center gap-2">
-                            <Lightbulb className="h-5 w-5 text-accent" />
-                            Genie's Suggestions
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      {isLoadingComplementary ? (
-                        <div className="flex items-center gap-2 text-muted-foreground pt-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Thinking of complementary ingredients...</span>
-                        </div>
-                      ) : complementary && complementary.suggestedIngredients.length > 0 ? (
-                        <div className="space-y-4 pt-2">
-                            <p className="text-base italic text-muted-foreground">{complementary.reasoning}</p>
-                            <Separator/>
-                            <div className="flex flex-wrap gap-2">
-                                {complementary.suggestedIngredients.map((ing) => (
-                                    <Badge key={ing} className="bg-accent/80 text-accent-foreground hover:bg-accent">{ing}</Badge>
-                                ))}
-                            </div>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground pt-2">Could not get suggestions at this time.</p>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl p-0">
+        <ScrollArea className="h-full">
+          <div>
+            <div className="relative">
+              <Image
+                src={recipe.image}
+                alt={recipe.name}
+                width={800}
+                height={400}
+                data-ai-hint={recipe.imageHint}
+                className="aspect-[2/1] w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             </div>
-          </ScrollArea>
-        </SheetContent>
-      </Sheet>
-    </>
+
+            <div className="p-6">
+              <SheetHeader className="mb-4 text-left">
+                <SheetTitle className="font-headline text-3xl md:text-4xl">{recipe.name}</SheetTitle>
+                <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.shortDescription}</SheetDescription>
+                <div className="flex items-center gap-4 pt-2">
+                  <Button
+                    onClick={toggleFavorite}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${isRecipeFavorite ? 'text-destructive fill-current' : 'text-foreground'}`}
+                    />
+                    {isRecipeFavorite ? 'Saved' : 'Save'}
+                  </Button>
+                  <Button
+                    onClick={handlePrint}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print
+                  </Button>
+                </div>
+              </SheetHeader>
+
+              <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4">
+                <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
+                  <Clock className="h-6 w-6 text-primary" />
+                  <p className="text-sm font-semibold">Prep</p>
+                  <p className="text-xs text-muted-foreground">{recipe.prepTime}</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
+                  <Clock className="h-6 w-6 text-primary" />
+                  <p className="text-sm font-semibold">Cook</p>
+                  <p className="text-xs text-muted-foreground">{recipe.cookTime}</p>
+                </div>
+                <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
+                  <Utensils className="h-6 w-6 text-primary" />
+                  <p className="text-sm font-semibold">Serves</p>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustServings(-1)} disabled={currentServings <= 1}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-xs font-bold text-muted-foreground">{currentServings}</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => adjustServings(1)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
+                  <Award className="h-6 w-6 text-primary" />
+                  <p className="text-sm font-semibold">Difficulty</p>
+                  <p className="text-xs text-muted-foreground">{recipe.difficulty}</p>
+                </div>
+              </div>
+              
+              <div className="mb-6 flex justify-center gap-4 text-center">
+                <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
+                    <p className="text-sm font-semibold">Cuisine</p>
+                    <p className="text-xs text-muted-foreground">{recipe.cuisine}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
+                    <p className="text-sm font-semibold">Calories</p>
+                    <p className="text-xs text-muted-foreground">{recipe.calories} kcal</p>
+                  </div>
+              </div>
+
+
+              <Accordion type="multiple" defaultValue={['ingredients', 'instructions']} className="w-full">
+                <AccordionItem value="ingredients">
+                  <AccordionTrigger className="text-lg font-semibold">Ingredients</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {recipe.ingredients.map((ing) => (
+                        <Badge key={ing} variant="secondary" className="text-base py-1 px-3">{getAdjustedIngredient(ing)}</Badge>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="instructions">
+                  <AccordionTrigger className="text-lg font-semibold">Instructions</AccordionTrigger>
+                  <AccordionContent>
+                    <ol className="list-inside list-decimal space-y-4 pt-2 text-base">
+                      {instructionsArray.map((step, index) => (
+                        <li key={index} className="leading-relaxed">{step.trim()}</li>
+                      ))}
+                    </ol>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="suggestions">
+                  <AccordionTrigger className="text-lg font-semibold">
+                      <div className="flex items-center gap-2">
+                          <Lightbulb className="h-5 w-5 text-accent" />
+                          Genie's Suggestions
+                      </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {isLoadingComplementary ? (
+                      <div className="flex items-center gap-2 text-muted-foreground pt-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Thinking of complementary ingredients...</span>
+                      </div>
+                    ) : complementary && complementary.suggestedIngredients.length > 0 ? (
+                      <div className="space-y-4 pt-2">
+                          <p className="text-base italic text-muted-foreground">{complementary.reasoning}</p>
+                          <Separator/>
+                          <div className="flex flex-wrap gap-2">
+                              {complementary.suggestedIngredients.map((ing) => (
+                                  <Badge key={ing} className="bg-accent/80 text-accent-foreground hover:bg-accent">{ing}</Badge>
+                              ))}
+                          </div>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground pt-2">Could not get suggestions at this time.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+        </ScrollArea>
+      </SheetContent>
+    </Sheet>
   );
 }
