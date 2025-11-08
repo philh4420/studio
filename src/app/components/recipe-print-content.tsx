@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import type { RecipeWithId } from '@/lib/types';
 import { Clock, Utensils, Award } from 'lucide-react';
 
@@ -35,7 +34,7 @@ export default function RecipePrintContent({ recipe }: { recipe: RecipeWithId; }
     .filter((step) => step.trim() !== '');
 
   return (
-    <div id="printable-content" className="hidden print:block p-8 font-sans text-black">
+    <div id="printable-content" className="absolute -left-[9999px] p-8 font-sans text-black">
       <h1 className="font-headline text-4xl mb-2">{recipe.name}</h1>
       <p className="text-lg italic text-gray-600 mb-6">{recipe.shortDescription}</p>
 

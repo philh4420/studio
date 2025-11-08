@@ -82,3 +82,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body > div:first-child {
+    display: none;
+  }
+  #printable-content {
+    display: block !important;
+  }
+}

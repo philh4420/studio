@@ -21,12 +21,8 @@ export default function Home() {
 
   useEffect(() => {
     if (recipeToPrint) {
-      // Small timeout to allow state to update and component to render
-      const timer = setTimeout(() => {
-        window.print();
-        setRecipeToPrint(null); // Reset after printing
-      }, 100);
-      return () => clearTimeout(timer);
+      window.print();
+      setRecipeToPrint(null); // Reset after queuing print
     }
   }, [recipeToPrint, setRecipeToPrint]);
 
@@ -34,7 +30,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen w-full flex-col">
       <Header />
-      <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8 print:hidden">
+      <main className="flex flex-1 flex-col items-center gap-4 p-4 md:gap-8 md:p-8">
         <Tabs defaultValue="generator" className="w-full max-w-6xl">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="generator">
