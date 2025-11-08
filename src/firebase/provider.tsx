@@ -2,29 +2,39 @@
 import {
   createContext,
   useContext,
-  useEffect,
-  useState,
   type ReactNode,
 } from 'react';
-import { type FirebaseApp } from 'firebase/app';
-import { type Auth } from 'firebase/auth';
-import { type Firestore } from 'firebase/firestore';
-import {
-  getFirebaseApp,
-  getFirebaseAuth,
-  getFirebaseFirestore,
-} from '@/firebase';
+import { initializeApp, getApp, getApps, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
+
+// Initialize Firebase services directly in this file.
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const auth = getAuth(app);
+const firestore = getFirestore(app);
 
 // Define the shape of the context value.
 interface FirebaseContextValue {
-  app: FirebaseApp | null;
-  auth: Auth | null;
-  firestore: Firestore | null;
+  app: FirebaseApp;
+  auth: Auth;
+  firestore: Firestore;
 }
 
-// Create the context with a default null value.
+// Create the context.
 const FirebaseContext = createContext<FirebaseContextValue | null>(null);
+
+/**
+ * Provider component that makes the initialized Firebase services available to children.
+ */
+export function FirebaseProvider({ children }: { children: ReactNode }) {
+  const value = { app, auth, firestore };
+  return (
+    <FirebaseContext.Provider value={value}>
+      {children}
+    </FirebaseContext.Provider>
+  );
+}
 
 /**
  * Custom hook to access the Firebase context.
@@ -37,46 +47,16 @@ export function useFirebase() {
   }
   return context;
 }
+
+// Custom hooks to access individual Firebase services.
 export function useFirebaseApp() {
   return useFirebase().app;
 }
+
 export function useAuth() {
   return useFirebase().auth;
 }
+
 export function useFirestore() {
   return useFirebase().firestore;
-}
-
-// Define props for the provider component.
-interface FirebaseProviderProps {
-  children: ReactNode;
-}
-
-/**
- * Provider component that initializes Firebase and makes it available to children.
- */
-export function FirebaseProvider({ children }: FirebaseProviderProps) {
-  const [firebase, setFirebase] = useState<FirebaseContextValue>({
-    app: null,
-    auth: null,
-    firestore: null,
-  });
-
-  useEffect(() => {
-    // Only initialize Firebase if the config is populated.
-    if (firebaseConfig && 'apiKey' in firebaseConfig && firebaseConfig.apiKey) {
-      // Initialize Firebase services on the client side.
-      const app = getFirebaseApp();
-      const auth = getFirebaseAuth(app);
-      const firestore = getFirebaseFirestore(app);
-
-      setFirebase({ app, auth, firestore });
-    }
-  }, []);
-
-  return (
-    <FirebaseContext.Provider value={firebase}>
-      {children}
-    </FirebaseContext.Provider>
-  );
 }

@@ -1,13 +1,15 @@
 'use client';
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
 import { useUser, useFirebaseApp } from '@/firebase';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogIn, LogOut, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { LogIn, LogOut, Loader2, UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,28 +27,61 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger
+} from '@/components/ui/tabs';
 import { FridgeGenieLogo } from '@/components/icons';
+
 
 export default function UserMenu() {
   const user = useUser();
   const app = useFirebaseApp();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSignIn = async () => {
+  const handleSignUp = async () => {
     setIsLoading(true);
+    setError(null);
     if (!app) {
       console.error('Firebase app not initialized');
+      setError('An unexpected error occurred. Please try again later.');
       setIsLoading(false);
       return;
     }
     const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      await createUserWithEmailAndPassword(auth, email, password);
       setIsLoginDialogOpen(false);
-    } catch (error) {
-      console.error('Error signing in with Google', error);
+    } catch (error: any) {
+      console.error('Error signing up:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    if (!app) {
+      console.error('Firebase app not initialized');
+      setError('An unexpected error occurred. Please try again later.');
+      setIsLoading(false);
+      return;
+    }
+    const auth = getAuth(app);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setIsLoginDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -62,57 +96,97 @@ export default function UserMenu() {
     await signOut(auth);
   };
 
+  const openLoginDialog = () => {
+    setEmail('');
+    setPassword('');
+    setError(null);
+    setIsLoginDialogOpen(true);
+  }
+
   if (user === undefined) {
-     return <Loader2 className="h-6 w-6 animate-spin" />;
+    return <Loader2 className="h-6 w-6 animate-spin" />;
   }
 
   if (!user) {
     return (
       <>
-        <Button variant="outline" onClick={() => setIsLoginDialogOpen(true)}>
+        <Button variant="outline" onClick={openLoginDialog}>
           <LogIn className="mr-2 h-4 w-4" />
           Login
         </Button>
         <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-center gap-2 text-2xl">
-                <FridgeGenieLogo className="h-8 w-8 text-primary" />
-                Welcome to Fridge Genie
-              </DialogTitle>
-              <DialogDescription className="text-center pt-2">
-                Sign in to save your favorite recipes and shopping lists across devices.
-              </DialogDescription>
+                <DialogTitle className="flex items-center justify-center gap-2 text-2xl">
+                    <FridgeGenieLogo className="h-8 w-8 text-primary" />
+                    Welcome to Fridge Genie
+                </DialogTitle>
+                <DialogDescription className="text-center pt-2">
+                    Sign in or create an account to save your preferences.
+                </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <Button
-                onClick={handleSignIn}
-                disabled={isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <svg
-                    className="mr-2 h-4 w-4"
-                    aria-hidden="true"
-                    focusable="false"
-                    data-prefix="fab"
-                    data-icon="google"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 488 512"
+            <Tabs defaultValue="signin" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="signin">Sign In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              <TabsContent value="signin">
+                <div className="py-4 space-y-4">
+                  <Input
+                    id="email-signin"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Input
+                    id="password-signin"
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                  <Button
+                    onClick={handleSignIn}
+                    disabled={isLoading || !email || !password}
+                    className="w-full"
+                    size="lg"
                   >
-                    <path
-                      fill="currentColor"
-                      d="M488 261.8C488 403.3 381.5 512 244 512 111.8 512 0 400.2 0 261.8 0 123.3 111.8 11.8 244 11.8c70.3 0 129.8 27.8 173.4 71.9l-67.4 62c-23-21.6-55.2-34.8-93.2-34.8-69.5 0-126 56.5-126 126s56.5 126 126 126c82.3 0 111.4-62.2 115.3-93.2H244v-75.5h244z"
-                    ></path>
-                  </svg>
-                )}
-                Sign in with Google
-              </Button>
-            </div>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} 
+                    Sign In
+                  </Button>
+                </div>
+              </TabsContent>
+              <TabsContent value="signup">
+                <div className="py-4 space-y-4">
+                  <Input
+                    id="email-signup"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <Input
+                    id="password-signup"
+                    type="password"
+                    placeholder="Password (6+ characters)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                  <Button
+                    onClick={handleSignUp}
+                    disabled={isLoading || !email || !password}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} 
+                    Create Account
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </DialogContent>
         </Dialog>
       </>
@@ -140,7 +214,7 @@ export default function UserMenu() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user.displayName}
+              {user.displayName || 'User'}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}

@@ -5,8 +5,8 @@ import Image from 'next/image';
 import type { RecipeWithId } from '@/lib/types';
 import { useFavorites } from '@/hooks/use-favorites';
 import { useShoppingList } from '@/hooks/use-shopping-list';
-import { getComplementaryIngredientsAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { ComplementaryIngredients } from './complementary-ingredients';
 
 import {
   Sheet,
@@ -34,11 +34,6 @@ interface RecipeDetailsProps {
   onClose: () => void;
 }
 
-interface Complementary {
-  suggestedIngredients: string[];
-  reasoning: string;
-}
-
 // Simple function to parse ingredient quantities
 const parseIngredient = (ingredient: string): { quantity: number | null, unit: string, name: string } => {
   const quantityMatch = ingredient.match(/^(\d+\.?\d*)\s*([a-zA-Z]*)\s*(.*)/);
@@ -59,8 +54,6 @@ export default function RecipeDetails({
   const { shoppingList, addIngredient, removeIngredient, isInList } = useShoppingList();
   const { toast } = useToast();
 
-  const [complementary, setComplementary] = useState<Complementary | null>(null);
-  const [isLoadingComplementary, setIsLoadingComplementary] = useState(false);
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
   
   const originalServings = recipe ? parseInt(recipe.servings.split(' ')[0]) || 1 : 1;
@@ -72,24 +65,6 @@ export default function RecipeDetails({
     }
   }, [recipe]);
 
-
-  useEffect(() => {
-    if (recipe && isOpen) {
-      const fetchComplementary = async () => {
-        setIsLoadingComplementary(true);
-        setComplementary(null);
-        const result = await getComplementaryIngredientsAction({
-          ingredients: recipe.ingredients,
-          recipeName: recipe.name,
-        });
-        if (result && !result.error) {
-          setComplementary(result);
-        }
-        setIsLoadingComplementary(false);
-      };
-      fetchComplementary();
-    }
-  }, [recipe, isOpen]);
 
   if (!recipe) return null;
 
@@ -178,7 +153,7 @@ export default function RecipeDetails({
                     </Button>
                     <Button onClick={() => setIsHealthModalOpen(true)} variant="outline" size="sm" className="bg-accent/10 text-accent-foreground">
                       <BrainCircuit className="h-4 w-4 mr-2 text-accent" />
-                      Genie's Tips
+                      Genie&apos;s Tips
                     </Button>
                   </div>
                 </SheetHeader>
@@ -266,24 +241,7 @@ export default function RecipeDetails({
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      {isLoadingComplementary ? (
-                        <div className="flex items-center gap-2 text-muted-foreground pt-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Thinking of complementary ingredients...</span>
-                        </div>
-                      ) : complementary && complementary.suggestedIngredients.length > 0 ? (
-                        <div className="space-y-4 pt-2">
-                            <p className="text-base italic text-muted-foreground">{complementary.reasoning}</p>
-                            <Separator/>
-                            <div className="flex flex-wrap gap-2">
-                                {complementary.suggestedIngredients.map((ing) => (
-                                    <Badge key={ing} className="bg-accent/80 text-accent-foreground hover:bg-accent">{ing}</Badge>
-                                ))}
-                            </div>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground pt-2">Could not get suggestions at this time.</p>
-                      )}
+                      <ComplementaryIngredients ingredients={recipe.ingredients} />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

@@ -50,7 +50,7 @@ export function useShoppingList() {
         return;
       }
 
-      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-');
+      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
       const itemRef = doc(shoppingListCollection, ingredientId);
 
       setDoc(itemRef, { name: ingredient })
@@ -75,7 +75,7 @@ export function useShoppingList() {
   const removeIngredient = useCallback(
     (ingredient: string) => {
       if (!user || !firestore || !shoppingListCollection) return;
-      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-');
+      const ingredientId = ingredient.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
       const itemRef = doc(shoppingListCollection, ingredientId);
 
       deleteDoc(itemRef)
@@ -102,7 +102,7 @@ export function useShoppingList() {
 
     const batch = writeBatch(firestore);
     data.forEach((item) => {
-      const ingredientId = (item.name as string).toLowerCase().replace(/\s+/g, '-');
+      const ingredientId = (item.name as string).toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-');
       const itemRef = doc(firestore, 'users', user.uid, 'shoppingList', ingredientId);
       batch.delete(itemRef);
     });

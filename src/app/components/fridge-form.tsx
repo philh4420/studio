@@ -104,7 +104,7 @@ export default function FridgeForm({
           My Fridge
         </CardTitle>
         <CardDescription>
-          Add the ingredients you have on hand, and we'll suggest some recipes.
+          Add the ingredients you have on hand, and we&apos;ll suggest some recipes.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

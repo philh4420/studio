@@ -48,3 +48,13 @@ export async function makeRecipeHealthierAction(
     return { error: 'Failed to generate health suggestions. Please try again.' };
   }
 }
+
+export async function complementaryIngredients(input: SuggestComplementaryIngredientsInput) {
+    try {
+        const result = await suggestComplementaryIngredients(input);
+        return result;
+    } catch (error) {
+        console.error(error);
+        return { error: 'Failed to suggest ingredients. Please try again.' };
+    }
+}

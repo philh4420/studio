@@ -46,7 +46,7 @@ export default function FavoritesView() {
         </div>
         <h3 className="text-xl font-semibold text-foreground">No Favorite Recipes</h3>
         <p className="mt-2 text-muted-foreground">
-          You haven't saved any recipes yet. Find a recipe you like and click the heart to save it!
+          You haven&apos;t saved any recipes yet. Find a recipe you like and click the heart to save it!
         </p>
       </div>
     );

@@ -104,7 +104,7 @@ export default function RecipeView({
         </div>
         <h3 className="text-xl font-semibold text-foreground">No Recipes Yet</h3>
         <p className="mt-2 text-muted-foreground">
-          Add some ingredients and click "Generate Recipes" to get started!
+          Add some ingredients and click &quot;Generate Recipes&quot; to get started!
         </p>
       </div>
     );

@@ -49,7 +49,7 @@ export default function HealthSuggestions({ recipe, isOpen, onClose }: HealthSug
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <BrainCircuit className="h-6 w-6 text-primary" />
-            Genie's Health Tips for {recipe.name}
+            Genie&apos;s Health Tips for {recipe.name}
           </DialogTitle>
           <DialogDescription>
             Here are some AI-powered suggestions to make this recipe even healthier.
