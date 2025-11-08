@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
-import { PT_Sans } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/app/components/theme-provider';
 import './globals.css';
 import { FirebaseProvider } from '@/firebase/provider';
 
-const ptSans = PT_Sans({
+const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-pt-sans',
+  variable: '--font-poppins',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${ptSans.className} font-body antialiased`}>
+      <body className={`${poppins.className} font-body antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <FirebaseProvider>{children}</FirebaseProvider>
           <Toaster />
