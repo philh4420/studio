@@ -14,6 +14,7 @@ import {
   getFirebaseAuth,
   getFirebaseFirestore,
 } from '@/firebase';
+import { firebaseConfig } from './config';
 
 // Define the shape of the context value.
 interface FirebaseContextValue {
@@ -62,12 +63,15 @@ export function FirebaseProvider({ children }: FirebaseProviderProps) {
   });
 
   useEffect(() => {
-    // Initialize Firebase services on the client side.
-    const app = getFirebaseApp();
-    const auth = getFirebaseAuth(app);
-    const firestore = getFirebaseFirestore(app);
+    // Only initialize Firebase if the config is populated.
+    if (firebaseConfig && 'apiKey' in firebaseConfig && firebaseConfig.apiKey) {
+      // Initialize Firebase services on the client side.
+      const app = getFirebaseApp();
+      const auth = getFirebaseAuth(app);
+      const firestore = getFirebaseFirestore(app);
 
-    setFirebase({ app, auth, firestore });
+      setFirebase({ app, auth, firestore });
+    }
   }, []);
 
   return (
