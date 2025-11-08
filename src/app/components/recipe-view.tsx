@@ -1,11 +1,20 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import type { RecipeWithId } from '@/lib/types';
 import RecipeList from './recipe-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { UtensilsCrossed, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { UtensilsCrossed, AlertTriangle, Search, Filter } from 'lucide-react';
 
 interface RecipeViewProps {
   recipes: RecipeWithId[];
@@ -31,11 +40,48 @@ export default function RecipeView({
   isLoading,
   error,
 }: RecipeViewProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [cuisineFilter, setCuisineFilter] = useState<string[]>([]);
+  const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
+
+  const uniqueCuisines = useMemo(() => {
+    const cuisines = new Set(recipes.map(r => r.cuisine));
+    return Array.from(cuisines);
+  }, [recipes]);
+
+  const uniqueDifficulties = useMemo(() => {
+    const difficulties = new Set(recipes.map(r => r.difficulty));
+    return Array.from(difficulties);
+  }, [recipes]);
+
+  const filteredRecipes = useMemo(() => {
+    return recipes.filter(recipe => {
+      const matchesSearch =
+        recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        recipe.ingredients.some(ing => ing.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCuisine =
+        cuisineFilter.length === 0 || cuisineFilter.includes(recipe.cuisine);
+
+      const matchesDifficulty =
+        difficultyFilter.length === 0 || difficultyFilter.includes(recipe.difficulty);
+
+      return matchesSearch && matchesCuisine && matchesDifficulty;
+    });
+  }, [recipes, searchTerm, cuisineFilter, difficultyFilter]);
+
+  const toggleFilter = (filterList: string[], setFilter: (val: string[]) => void, value: string) => {
+    if (filterList.includes(value)) {
+      setFilter(filterList.filter(item => item !== value));
+    } else {
+      setFilter([...filterList, value]);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2">
-        <RecipeSkeleton />
-        <RecipeSkeleton />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => <RecipeSkeleton key={i} />)}
       </div>
     );
   }
@@ -64,5 +110,54 @@ export default function RecipeView({
     );
   }
 
-  return <RecipeList recipes={recipes} />;
+  return (
+    <>
+      <div className="mb-4 flex flex-col md:flex-row gap-2">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            placeholder="Search recipes or ingredients..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"><Filter className="mr-2 h-4 w-4"/>Cuisine</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {uniqueCuisines.map(cuisine => (
+                <DropdownMenuCheckboxItem
+                  key={cuisine}
+                  checked={cuisineFilter.includes(cuisine)}
+                  onCheckedChange={() => toggleFilter(cuisineFilter, setCuisineFilter, cuisine)}
+                >
+                  {cuisine}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline"><Filter className="mr-2 h-4 w-4"/>Difficulty</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {uniqueDifficulties.map(difficulty => (
+                <DropdownMenuCheckboxItem
+                  key={difficulty}
+                  checked={difficultyFilter.includes(difficulty)}
+                  onCheckedChange={() => toggleFilter(difficultyFilter, setDifficultyFilter, difficulty)}
+                >
+                  {difficulty}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <RecipeList recipes={filteredRecipes} />
+    </>
+  );
 }

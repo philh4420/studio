@@ -23,7 +23,7 @@ export default function RecipeList({ recipes, isFavoritesList = false }: RecipeL
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {recipes.map((recipe) => (
           <RecipeCard
             key={recipe.id}

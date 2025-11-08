@@ -3,7 +3,7 @@
 import { useFavorites } from '@/hooks/use-favorites';
 import RecipeList from './recipe-list';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BookMarked } from 'lucide-react';
+import { BookHeart } from 'lucide-react';
 
 export default function FavoritesView() {
   const { favorites, isLoaded } = useFavorites();
@@ -26,7 +26,7 @@ export default function FavoritesView() {
     return (
       <div className="mt-8 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-card p-12 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
-          <BookMarked className="h-8 w-8 text-muted-foreground" />
+          <BookHeart className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-xl font-semibold text-foreground">No Favorite Recipes</h3>
         <p className="mt-2 text-muted-foreground">
