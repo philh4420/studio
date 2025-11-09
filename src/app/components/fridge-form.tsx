@@ -4,9 +4,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { generateRecipesAction } from '@/app/actions';
-import type { RecipeWithId } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,18 +24,15 @@ const formSchema = z.object({
 });
 
 interface FridgeFormProps {
-  setRecipes: (recipes: RecipeWithId[]) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
+  onGenerate: (ingredients: string[]) => void;
+  isLoading: boolean;
 }
 
 export default function FridgeForm({
-  setRecipes,
-  setIsLoading,
-  setError,
+  onGenerate,
+  isLoading,
 }: FridgeFormProps) {
   const [ingredients, setIngredients] = useState<string[]>(['Tomatoes', 'Cheese', 'Basil']);
-  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -73,31 +67,7 @@ export default function FridgeForm({
       });
       return;
     }
-    setIsLoading(true);
-    setIsGenerating(true);
-    setError(null);
-    setRecipes([]);
-
-    const result = await generateRecipesAction({ ingredients });
-
-    if (result.error) {
-      setError(result.error);
-    } else if (result.recipes) {
-      const recipesWithIds: RecipeWithId[] = result.recipes.map(
-        (recipe, index) => {
-          const placeholder = PlaceHolderImages[index % PlaceHolderImages.length];
-          return {
-          ...recipe,
-          id: `${new Date().getTime()}-${index}`,
-          image: placeholder.imageUrl,
-          imageHint: placeholder.imageHint,
-        }}
-      );
-      setRecipes(recipesWithIds);
-    }
-
-    setIsLoading(false);
-    setIsGenerating(false);
+    onGenerate(ingredients);
   }
 
   return (
@@ -168,11 +138,11 @@ export default function FridgeForm({
         </div>
         <Button
           onClick={handleGenerateRecipes}
-          disabled={isGenerating}
+          disabled={isLoading}
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
           size="lg"
         >
-          {isGenerating ? (
+          {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Sparkles className="mr-2 h-4 w-4" />

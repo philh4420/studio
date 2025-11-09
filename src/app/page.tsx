@@ -11,9 +11,14 @@ import RecipeView from '@/app/components/recipe-view';
 import FavoritesView from '@/app/components/favorites-view';
 import ShoppingListView from '@/app/components/shopping-list-view';
 import ErrorDisplay from '@/app/components/error-display';
-import { BookHeart, ChefHat, ShoppingBasket } from 'lucide-react';
+import UserMenu from '@/app/components/user-menu';
+import { useUser } from '@/firebase';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { BookHeart, ChefHat, ShoppingBasket, Loader2 } from 'lucide-react';
 
 export default function Home() {
+  const user = useUser();
   const [recipes, setRecipes] = useState<RecipeWithId[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +54,34 @@ export default function Home() {
   const handleRetry = () => {
     handleGenerateRecipes(lastIngredients);
   };
+
+  if (user === undefined) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Loading user session...</p>
+      </div>
+    );
+  }
+
+  if (user === null) {
+    return (
+      <div className="flex min-h-screen w-full flex-col bg-background">
+        <Header />
+        <main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 md:gap-8 md:p-8">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-3xl font-headline">Welcome to Fridge Genie!</CardTitle>
+              <CardDescription>Log in or create an account to start generating delicious recipes from your fridge.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserMenu />
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
