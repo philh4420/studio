@@ -12,6 +12,7 @@ import {
 import {
   makeRecipeHealthier,
   MakeRecipeHealthierInput,
+  MakeRecipeHealthierOutput
 } from '@/ai/flows/make-recipe-healthier';
 
 export async function generateRecipesAction(
@@ -40,13 +41,13 @@ export async function getComplementaryIngredientsAction(
 
 export async function makeRecipeHealthierAction(
   input: MakeRecipeHealthierInput
-) {
+): Promise<MakeRecipeHealthierOutput | { error: string }> {
   try {
     const result = await makeRecipeHealthier(input);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    return { error: 'Failed to generate health suggestions. Please try again.' };
+    return { error: error.message || 'Failed to generate health suggestions. Please try again.' };
   }
 }
 

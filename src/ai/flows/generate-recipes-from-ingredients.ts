@@ -1,70 +1,64 @@
-'use server';
+import { z } from 'zod';
+import { ai } from '@/ai/genkit';
 
-/**
- * @fileOverview Generates recipe suggestions based on user-provided ingredients.
- *
- * - generateRecipesFromIngredients - A function that takes a list of ingredients and returns recipe suggestions.
- * - GenerateRecipesFromIngredientsInput - The input type for the generateRecipesFromIngredients function.
- * - GenerateRecipesFromIngredientsOutput - The return type for the generateRecipesFromIngredients function.
- */
+const StepsSchema = z.object({
+  step: z.number().describe('The step number, starting from 1.'),
+  description: z.string().describe('The description of the step.'),
+});
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+const RecipeSchema = z.object({
+  name: z.string().describe('The name of the recipe.'),
+  description: z.string().describe('A short description of the recipe.'),
+  ingredients: z
+    .array(z.string())
+    .describe(
+      'A list of ingredients required for the recipe. This should include all ingredients, not just the ones available.'
+    ),
+  steps: z
+    .array(StepsSchema)
+    .describe(
+      'A list of steps to follow to prepare the recipe. This should be a comprehensive list of steps.'
+    ),
+  servings: z.number().describe('The number of servings the recipe makes.'),
+  time: z
+    .string()
+    .describe(
+      'The time it takes to prepare the recipe, in a friendly format (e.g., 20 minutes).'
+    ),
+  imageHint: z
+    .string()
+    .describe('A short description of the image content.'),
+});
 
 const GenerateRecipesFromIngredientsInputSchema = z.object({
   ingredients: z
     .array(z.string())
-    .describe('A list of ingredients available in the fridge.'),
+    .min(1, 'At least one ingredient is required.')
+    .describe('A list of ingredients currently available in the fridge.'),
 });
 export type GenerateRecipesFromIngredientsInput = z.infer<
   typeof GenerateRecipesFromIngredientsInputSchema
 >;
 
 const GenerateRecipesFromIngredientsOutputSchema = z.object({
-  recipes: z
-    .array(
-      z.object({
-        name: z.string().describe('The name of the recipe.'),
-        shortDescription: z
-          .string()
-          .describe('A short, enticing description of the recipe.'),
-        prepTime: z.string().describe("The preparation time, e.g., '15 minutes'."),
-        cookTime: z.string().describe("The cooking time, e.g., '25 minutes'."),
-        servings: z.string().describe("The number of servings, e.g., '4 people'."),
-        difficulty: z
-          .enum(['Easy', 'Medium', 'Hard'])
-          .describe('The difficulty level of the recipe.'),
-        cuisine: z.string().describe('The type of cuisine, e.g., Italian, Mexican.'),
-        calories: z.number().describe('The estimated number of calories per serving.'),
-        ingredients: z
-          .array(z.string())
-          .describe('The ingredients required for the recipe.'),
-        instructions: z.string().describe('The instructions for the recipe.'),
-      })
-    )
-    .describe('A list of 10 recipe suggestions.'),
+  recipes: z.array(RecipeSchema),
 });
 export type GenerateRecipesFromIngredientsOutput = z.infer<
   typeof GenerateRecipesFromIngredientsOutputSchema
 >;
 
-export async function generateRecipesFromIngredients(
-  input: GenerateRecipesFromIngredientsInput
-): Promise<GenerateRecipesFromIngredientsOutput> {
-  return generateRecipesFromIngredientsFlow(input);
-}
-
 const prompt = ai.definePrompt({
   name: 'generateRecipesFromIngredientsPrompt',
-  input: {schema: GenerateRecipesFromIngredientsInputSchema},
-  output: {schema: GenerateRecipesFromIngredientsOutputSchema},
+  input: { schema: GenerateRecipesFromIngredientsInputSchema },
+  output: { schema: GenerateRecipesFromIngredientsOutputSchema },
   prompt: `You are a recipe suggestion bot. Given the following ingredients, suggest 10 recipes that can be made.
-
-Ingredients: {{{ingredients}}}
-
-Please provide a list of recipes with all the requested details.
-
-Output in the following JSON format: {{outputSchema}}`,
+  
+  Ingredients: {{{ingredients}}}
+  
+  Please provide a list of recipes with all the requested details.
+  
+  Output in the following JSON format: {{outputSchema}}
+  `,
 });
 
 const generateRecipesFromIngredientsFlow = ai.defineFlow(
@@ -73,8 +67,23 @@ const generateRecipesFromIngredientsFlow = ai.defineFlow(
     inputSchema: GenerateRecipesFromIngredientsInputSchema,
     outputSchema: GenerateRecipesFromIngredientsOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  async (input) => {
+    const parsedInput = GenerateRecipesFromIngredientsInputSchema.safeParse(input);
+    if (!parsedInput.success) {
+      throw new Error(`Invalid input: ${parsedInput.error.errors.map(e => e.message).join(', ')}`);
+    }
+    try {
+      const { output } = await prompt(input);
+      return output!;
+    } catch (e) {
+      console.error(e);
+      throw new Error('Could not generate recipes.');
+    }
   }
 );
+
+export async function generateRecipesFromIngredients(
+  input: GenerateRecipesFromIngredientsInput
+): Promise<GenerateRecipesFromIngredientsOutput> {
+  return generateRecipesFromIngredientsFlow(input);
+}

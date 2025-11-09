@@ -8,10 +8,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, ShoppingBasket, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
 import { useUser } from '@/firebase';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ShoppingListView() {
   const user = useUser();
-  const { shoppingList, removeIngredient, clearList } = useShoppingList();
+  const { shoppingList, removeIngredient, clearList, isLoaded } = useShoppingList();
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
   const handleToggleChecked = (ingredient: string) => {
@@ -38,6 +39,29 @@ export default function ShoppingListView() {
           You need to be logged in to see your shopping list.
         </p>
       </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <Card className="max-w-2xl mx-auto mt-6">
+        <CardHeader>
+          <Skeleton className="h-8 w-3/4" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-5 w-5 rounded-sm" />
+                  <Skeleton className="h-5 w-48" />
+                </div>
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

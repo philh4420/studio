@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ai } from '@genkit-ai/ai';
+import { ai } from '@/ai/genkit';
 
 const SuggestComplementaryIngredientsInputSchema = z.object({
   ingredients: z
@@ -12,9 +12,10 @@ export type SuggestComplementaryIngredientsInput = z.infer<
 >;
 
 const SuggestComplementaryIngredientsOutputSchema = z.object({
-  suggestedIngredients: z
-    .array(z.string())
-    .describe('A list of ingredients that would complement the recipe.'),
+  suggestedCategories: z.array(z.object({
+    category: z.string().describe('The category of the suggested ingredients, e.g., "Herbs and Spices", "Vegetables", "Proteins".'),
+    items: z.array(z.string()).describe('A list of ingredients in this category.'),
+  })).describe('A list of categorized ingredient suggestions.'),
   reasoning: z
     .string()
     .describe('The reasoning behind the suggested ingredients.'),
@@ -33,6 +34,7 @@ const prompt = ai.definePrompt({
 And the recipe being considered: {{{recipeName}}}.
 
 Please suggest a list of ingredients that would complement the recipe and explain your reasoning.
+Group the suggested ingredients into logical categories such as "Herbs and Spices", "Vegetables", "Proteins", etc.
 
 Output in the following JSON format: {{outputSchema}}`,
 });
@@ -44,6 +46,10 @@ const suggestComplementaryIngredientsFlow = ai.defineFlow(
     outputSchema: SuggestComplementaryIngredientsOutputSchema,
   },
   async (input) => {
+    const parsedInput = SuggestComplementaryIngredientsInputSchema.safeParse(input);
+    if (!parsedInput.success) {
+      throw new Error(`Invalid input: ${parsedInput.error.errors.map(e => e.message).join(', ')}`);
+    }
     try {
       const { output } = await prompt(input);
       return output!;
