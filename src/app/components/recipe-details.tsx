@@ -7,6 +7,8 @@ import { useFavorites } from '@/hooks/use-favorites';
 import { useShoppingList } from '@/hooks/use-shopping-list';
 import { useToast } from '@/hooks/use-toast';
 import { ComplementaryIngredients } from './complementary-ingredients';
+import { calculateNutritionalInfoAction } from '@/app/actions';
+import { NutritionalInfoOutput } from '@/ai/flows/calculate-nutritional-info';
 
 import {
   Sheet,
@@ -57,12 +59,26 @@ export default function RecipeDetails({
 
   const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
   
-  const originalServings = recipe ? parseInt(recipe.servings.split(' ')[0]) || 1 : 1;
+  const originalServings = recipe ? parseInt(recipe.servings.toString().split(' ')[0]) || 1 : 1;
   const [currentServings, setCurrentServings] = useState(originalServings);
+  const [nutritionalInfo, setNutritionalInfo] = useState<NutritionalInfoOutput | null>(null);
+  const [loadingNutritionalInfo, setLoadingNutritionalInfo] = useState(false);
 
   useEffect(() => {
     if (recipe) {
-      setCurrentServings(parseInt(recipe.servings.split(' ')[0]) || 1);
+      setCurrentServings(parseInt(recipe.servings.toString().split(' ')[0]) || 1);
+      setNutritionalInfo(null);
+      const fetchNutritionalInfo = async () => {
+        setLoadingNutritionalInfo(true);
+        const result = await calculateNutritionalInfoAction({ recipe });
+        if ('error' in result) {
+          console.error(result.error);
+        } else {
+          setNutritionalInfo(result);
+        }
+        setLoadingNutritionalInfo(false);
+      };
+      fetchNutritionalInfo();
     }
   }, [recipe]);
 
@@ -95,7 +111,7 @@ export default function RecipeDetails({
 
   const handleShare = async () => {
     if (!recipe) return;
-    const recipeText = `Check out this recipe: ${recipe.name}\n\nIngredients:\n${recipe.ingredients.join('\n')}\n\nInstructions:\n${recipe.instructions}`;
+    const recipeText = `Check out this recipe: ${recipe.name}\n\nIngredients:\n${recipe.ingredients.join('\n')}\n\nInstructions:\n${recipe.steps.map(s => s.description).join('\n')}`;
     try {
       await navigator.clipboard.writeText(recipeText);
       toast({
@@ -125,9 +141,7 @@ export default function RecipeDetails({
     }
   };
 
-  const instructionsArray = recipe?.instructions
-    .split(/\d+\.\s/)
-    .filter((step) => step.trim() !== '') || [];
+  const instructionsArray = recipe?.steps.map(s => s.description) || [];
 
   return (
     <>
@@ -166,7 +180,7 @@ export default function RecipeDetails({
                   <div className="p-6">
                     <SheetHeader className="mb-4 text-left">
                       <SheetTitle className="font-headline text-3xl md:text-4xl">{recipe.name}</SheetTitle>
-                      <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.shortDescription}</SheetDescription>
+                      <SheetDescription className="text-base italic pt-1 text-muted-foreground">{recipe.description}</SheetDescription>
                       <div className="flex items-center gap-2 pt-2 flex-wrap print:hidden">
                         <Button
                           onClick={toggleFavorite}
@@ -193,16 +207,11 @@ export default function RecipeDetails({
                       </div>
                     </SheetHeader>
 
-                    <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4 print:hidden">
+                    <div className="my-6 grid grid-cols-2 gap-4 text-center sm:grid-cols-4 print:grid-cols-4">
                       <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
                         <Clock className="h-6 w-6 text-primary" />
-                        <p className="text-sm font-semibold">Prep</p>
-                        <p className="text-xs text-muted-foreground">{recipe.prepTime}</p>
-                      </div>
-                      <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                        <Clock className="h-6 w-6 text-primary" />
-                        <p className="text-sm font-semibold">Cook</p>
-                        <p className="text-xs text-muted-foreground">{recipe.cookTime}</p>
+                        <p className="text-sm font-semibold">Time</p>
+                        <p className="text-xs text-muted-foreground">{recipe.time}</p>
                       </div>
                       <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
                         <Utensils className="h-6 w-6 text-primary" />
@@ -218,24 +227,15 @@ export default function RecipeDetails({
                         </div>
                       </div>
                       <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
-                        <Award className="h-6 w-6 text-primary" />
-                        <p className="text-sm font-semibold">Difficulty</p>
-                        <p className="text-xs text-muted-foreground">{recipe.difficulty}</p>
+                        <p className="text-sm font-semibold">Calories</p>
+                        {loadingNutritionalInfo ? <Skeleton className="h-4 w-12" /> : <p className="text-xs text-muted-foreground">{nutritionalInfo?.calories} kcal</p>}
+                      </div>
+                      <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3">
+                        <p className="text-sm font-semibold">Protein</p>
+                        {loadingNutritionalInfo ? <Skeleton className="h-4 w-12" /> : <p className="text-xs text-muted-foreground">{nutritionalInfo?.protein}g</p>}
                       </div>
                     </div>
                     
-                    <div className="mb-6 flex justify-center gap-4 text-center print:hidden">
-                      <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
-                          <p className="text-sm font-semibold">Cuisine</p>
-                          <p className="text-xs text-muted-foreground">{recipe.cuisine}</p>
-                        </div>
-                        <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-3 px-6">
-                          <p className="text-sm font-semibold">Calories</p>
-                          <p className="text-xs text-muted-foreground">{recipe.calories} kcal</p>
-                        </div>
-                    </div>
-
-
                     <Accordion type="multiple" defaultValue={['ingredients', 'instructions']} className="w-full">
                       <AccordionItem value="ingredients">
                         <AccordionTrigger className="text-lg font-semibold">Ingredients</AccordionTrigger>
@@ -276,7 +276,7 @@ export default function RecipeDetails({
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                          <ComplementaryIngredients ingredients={recipe.ingredients} />
+                          <ComplementaryIngredients ingredients={recipe.ingredients} recipeName={recipe.name} />
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
@@ -289,7 +289,11 @@ export default function RecipeDetails({
       </Sheet>
       {isHealthModalOpen && recipe && (
         <HealthSuggestions 
-          recipe={recipe}
+          recipe={{
+            name: recipe.name,
+            ingredients: recipe.ingredients,
+            instructions: recipe.steps.map(s => s.description).join('\n'),
+          }}
           isOpen={isHealthModalOpen}
           onClose={() => setIsHealthModalOpen(false)}
         />

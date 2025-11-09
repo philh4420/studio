@@ -14,6 +14,11 @@ import {
   MakeRecipeHealthierInput,
   MakeRecipeHealthierOutput
 } from '@/ai/flows/make-recipe-healthier';
+import {
+  calculateNutritionalInfo,
+  NutritionalInfoInput,
+  NutritionalInfoOutput,
+} from '@/ai/flows/calculate-nutritional-info';
 
 export async function generateRecipesAction(
   input: GenerateRecipesFromIngredientsInput
@@ -60,5 +65,17 @@ export async function complementaryIngredients(
   } catch (error: any) {
     console.error(error);
     return { error: error.message || 'Failed to suggest ingredients. Please try again.' };
+  }
+}
+
+export async function calculateNutritionalInfoAction(
+  input: NutritionalInfoInput
+): Promise<NutritionalInfoOutput | { error: string }> {
+  try {
+    const result = await calculateNutritionalInfo(input);
+    return result;
+  } catch (error: any) {
+    console.error(error);
+    return { error: error.message || 'Failed to calculate nutritional info. Please try again.' };
   }
 }
