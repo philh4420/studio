@@ -7,6 +7,7 @@ import {
 import {
   suggestComplementaryIngredients,
   SuggestComplementaryIngredientsInput,
+  SuggestComplementaryIngredientsOutput
 } from '@/ai/flows/suggest-complementary-ingredients';
 import {
   makeRecipeHealthier,
@@ -31,9 +32,9 @@ export async function getComplementaryIngredientsAction(
   try {
     const result = await suggestComplementaryIngredients(input);
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    return { error: 'Failed to suggest ingredients. Please try again.' };
+    return { error: error.message || 'Failed to suggest ingredients. Please try again.' };
   }
 }
 
@@ -49,12 +50,14 @@ export async function makeRecipeHealthierAction(
   }
 }
 
-export async function complementaryIngredients(input: SuggestComplementaryIngredientsInput) {
-    try {
-        const result = await suggestComplementaryIngredients(input);
-        return result;
-    } catch (error) {
-        console.error(error);
-        return { error: 'Failed to suggest ingredients. Please try again.' };
-    }
+export async function complementaryIngredients(
+  input: SuggestComplementaryIngredientsInput
+): Promise<SuggestComplementaryIngredientsOutput | { error: string }> {
+  try {
+    const result = await suggestComplementaryIngredients(input);
+    return result;
+  } catch (error: any) {
+    console.error(error);
+    return { error: error.message || 'Failed to suggest ingredients. Please try again.' };
+  }
 }
